@@ -114,3 +114,15 @@ kidney_analysis_data = kidney_analysis_data.reset_index(drop=True)
 Dataframe only contains the significant genes and is sorted and reindexed
 """
 
+# Create a volcano plot of the log2 fold change vs. the -log10 of the p-value
+plt.figure(figsize=(10, 6))
+plt.scatter(kidney_analysis_data['Log2 Fold Change'], -np.log10(kidney_analysis_data['P-Value']), color='blue', s=10)
+plt.xlabel('Log2 Fold Change')
+plt.ylabel('-log10(P-Value)')
+plt.title('Volcano Plot of Kidney Samples')
+plt.axvline(x=0, color='black', linestyle='--')
+plt.axhline(y=-np.log10(0.05), color='black', linestyle='--')
+# Color the points using the adjusted p-value
+plt.scatter(kidney_analysis_data['Log2 Fold Change'], -np.log10(kidney_analysis_data['P-Value']), c=kidney_analysis_data['Adjusted P-Value'], cmap='coolwarm', s=10)
+plt.colorbar(label='Benjamini-Hochberg Adjusted P-Value')
+plt.show()
