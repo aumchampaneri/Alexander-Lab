@@ -20,4 +20,3 @@ kidney_data = raw_data[kidney_columns]
 print(kidney_data.head())
 """
 
-
