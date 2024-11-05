@@ -12,7 +12,7 @@ print(raw_data.head())
 """
 
 # Extract the columns corresponding to the kidney samples
-kidney_columns = ['Probe Name', '20190927_RQ-016723_Control-K-1_07.RCC', '20190927_RQ-016723_Control-K-2_08.RCC', '20190927_RQ-016723_Control-K-3_09.RCC', '20190927_RQ-016723_FHKO-K-1_10.RCC', '20190927_RQ-016723_FHKO-K-2_11.RCC', '20190927_RQ-016723_FHKO-K-2_11.RCC']
+kidney_columns = ['Probe Name', '20190927_RQ-016723_Control-K-1_07.RCC', '20190927_RQ-016723_Control-K-2_08.RCC', '20190927_RQ-016723_Control-K-3_09.RCC', '20190927_RQ-016723_FHKO-K-1_10.RCC', '20190927_RQ-016723_FHKO-K-2_11.RCC', '20190927_RQ-016723_FHKO-K-3_12.RCC']
 
 # Extract the kidney data into a new DataFrame
 kidney_data = raw_data[kidney_columns]
@@ -34,11 +34,53 @@ kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_Control-K-2_08.RCC
 kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_Control-K-3_09.RCC': 'Control 3'})
 kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_FHKO-K-1_10.RCC': 'FHKO 1'})
 kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_FHKO-K-2_11.RCC': 'FHKO 2'})
-kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_FHKO-K-2_11.RCC': 'FHKO 3'})
+kidney_data = kidney_data.rename(columns={'20190927_RQ-016723_FHKO-K-3_12.RCC': 'FHKO 3'})
 
 # Reset the index of the DataFrame
 kidney_data = kidney_data.reset_index(drop=True)
 
-## Data is now cleaned and ready for analysis
+""" # Data is now cleaned and ready for analysis
 print(kidney_data.head())
+"""
+
+# Change the data type of the columns to numeric
+kidney_data['Control 1'] = pd.to_numeric(kidney_data['Control 1'])
+kidney_data['Control 2'] = pd.to_numeric(kidney_data['Control 2'])
+kidney_data['Control 3'] = pd.to_numeric(kidney_data['Control 3'])
+kidney_data['FHKO 1'] = pd.to_numeric(kidney_data['FHKO 1'])
+kidney_data['FHKO 2'] = pd.to_numeric(kidney_data['FHKO 2'])
+kidney_data['FHKO 3'] = pd.to_numeric(kidney_data['FHKO 3'])
+
+""" # Date types of the columns are fixed
+# Get the data types of the columns
+print(kidney_data.dtypes) """
+
+""" Standard NanoString Analysis 
+- Average of the Control and FHKO samples
+- Standard deviation of the Control and FHKO samples
+- Fold change of the FHKO samples compared to the Control samples
+- Log2 fold change of the FHKO samples compared to the Control samples
+- P-value of the FHKO samples compared to the Control samples
+- Adjusted p-value using the Benjamini-Hochberg procedure
+"""
+
+# Calculate the mean of the FHKO and Control samples
+kidney_data['Control Mean'] = kidney_data[['Control 1', 'Control 2', 'Control 3']].mean(axis=1)
+kidney_data['FHKO Mean'] = kidney_data[['FHKO 1', 'FHKO 2', 'FHKO 3']].mean(axis=1)
+
+# Calculate the standard deviation of the FHKO and Control samples
+kidney_data['Control STD'] = kidney_data[['Control 1', 'Control 2', 'Control 3']].std(axis=1)
+kidney_data['FHKO STD'] = kidney_data[['FHKO 1', 'FHKO 2', 'FHKO 3']].std(axis=1)
+
+# Calculate the fold change of the FHKO samples compared to the Control samples
+kidney_data['Fold Change'] = kidney_data['FHKO Mean'] / kidney_data['Control Mean']
+
+# Calculate the log2 fold change of the FHKO samples compared to the Control samples
+kidney_data['Log2 Fold Change'] = np.log2(kidney_data['Fold Change'])
+
+# Calculate the p-value of the FHKO samples compared to the Control samples
+kidney_data['P-Value'] = ttest_ind(kidney_data[['Control 1', 'Control 2', 'Control 3']], kidney_data[['FHKO 1', 'FHKO 2', 'FHKO 3']], axis=1)[1]
+
+# Calculate the adjusted p-value using the Benjamini-Hochberg procedure
+kidney_data['Adjusted P-Value'] = multipletests(kidney_data['P-Value'], method='fdr_bh')[1]
 
