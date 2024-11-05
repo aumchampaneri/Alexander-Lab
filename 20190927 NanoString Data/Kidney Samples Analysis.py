@@ -1,6 +1,12 @@
 from appscript import k
+import matplotlib.pyplot as plt
 from matplotlib import axis
 import pandas as pd
+from sympy import im
+import numpy as np
+from scipy.stats import ttest_ind
+from statsmodels.stats.multitest import multipletests
+
 
 # Load the CSV file into a DataFrame
 file_path = '/Users/admin/Alexander-Lab/20190927 NanoString Data/Normalized-data-counts.csv'
@@ -83,4 +89,28 @@ kidney_data['P-Value'] = ttest_ind(kidney_data[['Control 1', 'Control 2', 'Contr
 
 # Calculate the adjusted p-value using the Benjamini-Hochberg procedure
 kidney_data['Adjusted P-Value'] = multipletests(kidney_data['P-Value'], method='fdr_bh')[1]
+
+""" # Isolate the Calculated Data
+New DataFrame containing only the gene names and the calculated data
+
+Sorted by log2 fold change and then filtered to only include genes with a p-value less than 0.05
+
+"""
+
+# Create a new data frame with the new columns and the gene column
+kidney_analysis_data = kidney_data[['Gene', 'Control Mean', 'FHKO Mean', 'Control STD', 'FHKO STD', 'Fold Change', 'Log2 Fold Change', 'P-Value', 'Adjusted P-Value']]
+
+# Sort the kidney_analysis_data by the log2 fold change
+kidney_analysis_data = kidney_analysis_data.sort_values(by='Log2 Fold Change', ascending=False)
+
+# Remove any rows with p values greater than 0.05
+kidney_analysis_data = kidney_analysis_data[kidney_analysis_data['P-Value'] < 0.05]
+
+# Reset the index of the DataFrame
+kidney_analysis_data = kidney_analysis_data.reset_index(drop=True)
+
+"""  # Ready to use the kidney_analysis_data DataFrame for visualization
+
+Dataframe only contains the significant genes and is sorted and reindexed
+"""
 
