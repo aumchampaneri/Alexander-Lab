@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.stats import ttest_ind
 from statsmodels.stats.multitest import multipletests
+import seaborn as sns
+
 
 
 #Load the CSV file into a DataFrame
@@ -105,17 +107,55 @@ kidney_analysis_data = kidney_analysis_data[kidney_analysis_data['P-Value'] < 0.
 kidney_analysis_data = kidney_analysis_data.reset_index(drop = True)
 
 # Ready to use the kidney_analysis_data DataFrame for visualization
-# Dataframe only contains the significant genes and is sorted and reindexed
+# Dataframe only contains the significant genes (where the gene meets the 95% confidence interval) and is sorted (Log 2 Change) and reindexed
+
+############# DEFINE CRITERIA FOR SIGNIFICANT GENES #############
+
+# Filtered Data to only significant genes
+# - Genes within the 95% confidence interval and with a log2 fold change greater than 0.585 (1.5-fold change)
+significant_genes = kidney_data[(kidney_data['P-Value'] < 0.05) & (np.abs(kidney_data['Log2 Fold Change']) > 0.585)]
+
+############# HEAT MAP #############
+
+# Generate heatmap label the y-axis with the gene names
+heatmap_data = significant_genes[['Gene', 'Control 1', 'Control 2', 'Control 3', 'FHKO 1', 'FHKO 2', 'FHKO 3']]
+# use column 'Gene' as index for the heatmap data
+heatmap_data = heatmap_data.set_index('Gene')
+sns.clustermap(heatmap_data,
+               standard_scale=0,
+               figsize=(4, 10),
+               dendrogram_ratio=(0.1, 0.1),
+               cmap='seismic',
+               yticklabels=True,
+               col_cluster=True,
+               cbar_pos=(0.905, .065, .015, .35)
+               )
+plt.show()
+
+
+############# VOLCANO PLOT #############
 
 #Create a volcano plot of the log2 fold change vs. the -log10 of the p-value
-plt.figure(figsize = (10, 6))
-plt.scatter(kidney_analysis_data['Log2 Fold Change'], -np.log10(kidney_analysis_data['P-Value']), color = 'blue', s = 10)
+plt.figure(figsize = (8, 6))
 plt.xlabel('Log2 Fold Change')
 plt.ylabel('-log10(P-Value)')
 plt.title('Volcano Plot of Kidney Samples')
 plt.axvline(x = 0, color = 'black', linestyle = '--')
 plt.axhline(y = -np.log10(0.05), color = 'black', linestyle = '--')
-#Color the points using the adjusted p-value
+#Color/plot the points using the adjusted p-value
 plt.scatter(kidney_analysis_data['Log2 Fold Change'], -np.log10(kidney_analysis_data['P-Value']), c = kidney_analysis_data['Adjusted P-Value'], cmap = 'coolwarm', s = 10)
 plt.colorbar(label = 'Benjamini-Hochberg Adjusted P-Value')
+# use the annotate function to add the gene names which exist in the significant genes dataframe
+for i in range(len(significant_genes)):
+    plt.annotate(significant_genes['Gene'].iloc[i], (significant_genes['Log2 Fold Change'].iloc[i], -np.log10(significant_genes['P-Value'].iloc[i])),
+                 textcoords='offset points',
+                 xytext=(1.5,3)
+                 )
 plt.show()
+
+
+
+
+
+
+
