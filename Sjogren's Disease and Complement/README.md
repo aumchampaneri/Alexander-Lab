@@ -33,3 +33,5 @@
 ## Potential Problems
 - Absolutely no experience working with either type of data
 - Computing power
+- Relatively new technique with not much documentation
+- Complex statistical analysis associated with scRNA-seq which i have no experience with
